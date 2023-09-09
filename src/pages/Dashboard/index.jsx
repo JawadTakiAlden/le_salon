@@ -41,10 +41,11 @@ const Dashboard = () => {
   }
 
 
+
   return (
     <Box>
         <StatisticsCards data={statisticsQuery?.data?.data} />
-        <TopMeals data={TopMealsQuery?.data?.data?.data} />
+        <TopMeals data={TopMealsQuery?.data?.data?.meals} />
     </Box>
   )
 }

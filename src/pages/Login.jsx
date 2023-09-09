@@ -58,8 +58,8 @@ export default function SignIn() {
     mutationFn : loginUser,
     onSuccess : (data) => {
       login(dispatch , {
-        token : data.data.data.token,
-        user : data.data.data.user
+        token : data.data.token,
+        user : data.data.user
       })
       navigate('/')
     }

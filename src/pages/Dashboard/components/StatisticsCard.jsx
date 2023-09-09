@@ -14,13 +14,13 @@ const StatisticsCard = ({title , value}) => {
             height : '100%',
             padding  : '30px',
             gap : '15px',
-            backgroundImage : `linear-gradient(${randomDegree}deg ,#020633 , #363843)`,
+            backgroundImage : `linear-gradient(${randomDegree}deg ,#261e00 , #D0B05C)`,
             borderRadius : '15px'
         }}
     >
         <Box
             sx={{
-                backgroundImage : 'linear-gradient(#056485 , #23db3c)',
+                backgroundImage : 'linear-gradient(#D0B05C , #2d2000)',
                 display : 'flex',
                 alignItems : 'center',
                 justifyContent : 'center',

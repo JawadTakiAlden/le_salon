@@ -11,7 +11,7 @@ const Header = () => {
             alignItems : ' center',
             justifyContent : 'space-between',
             marginTop : '10px',
-            backgroundColor : '#262834',
+            backgroundColor : '#1c1500',
             borderRadius : '10px',
             padding : '0px 20px',
             width : 'calc(100% - 10px)',
@@ -19,12 +19,12 @@ const Header = () => {
     >
         <Typography
             sx={{
-                color : '#23db3c',
+                color : '#D0B05C',
                 textTransform : 'capitalize',
                 fontSize : '22px',
             }}
         >
-            le salon
+            Godiva
         </Typography>
         <Box>
             <IconButton

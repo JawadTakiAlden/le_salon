@@ -117,8 +117,9 @@ const validationSchema = Yup.object({
                 display : 'flex',
                 alignItems : 'center',
                 justifyContent : 'center',
-                boxShadow : '2px 2px 10px -4px #23db3c',
+                boxShadow : '2px 2px 15px -4px #D0B05C',
                 padding : '20px',
+                borderRadius : '12px',
                 gap : '10px'
             }}
         >
@@ -148,7 +149,7 @@ const validationSchema = Yup.object({
                 <Typography
                     className=''
                     sx={{
-                        background: 'linear-gradient(to right, #23db3c 20%, #FF0 40%, #FF0 60%, #23db3c 80%)',
+                        background: 'linear-gradient(to right, #D0B05C 20%, #875800 40%, #875800 60%, #D0B05C 80%)',
                         backgroundSize: '200% auto',
                         
                         color: '#000',

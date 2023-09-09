@@ -1,7 +1,7 @@
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, MenuItem, Select, TextField, Typography, useMediaQuery } from '@mui/material'
 import React, { useState } from 'react'
 import MealImage from '../assets/images/meal-01.jpg'
-import { DeleteForeverOutlined, UpdateOutlined } from '@mui/icons-material'
+import { DeleteForeverOutlined, HideImageOutlined, ShowerOutlined, UpdateOutlined, Visibility, VisibilityOff } from '@mui/icons-material'
 import { useMutation } from '@tanstack/react-query'
 import { request } from '../api/request'
 import { Formik } from 'formik'
@@ -9,6 +9,12 @@ import * as Yup from 'yup'
 
 
 
+const gideMealInServer = (id) => {
+    return request({
+        url : `/switch_meal/${id}`,
+        method :'patch'
+    })
+}
 
 
 const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterOpen , refetch , categories}) => {
@@ -48,6 +54,19 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
             data : values
         })
     }
+
+    const hideMealMutatrtion = useMutation({
+        mutationKey : ['hide-meal-in-server'],
+        mutationFn : gideMealInServer,
+        onSuccess : () => {
+            refetch()
+            setMessage('a meal switched successfully')
+            setSeverity('success')
+            setOpenAlterOpen(true)
+            setAddFormOpen(false)
+            refetch()
+        }
+    })
 
     const updateMealMutation = useMutation({
         mutationKey : ['add-meal-to-category'],
@@ -119,7 +138,7 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
         deleteFromServer.mutate()
     }
 
-    if(deleteFromServer.isLoading){
+    if(deleteFromServer.isLoading || hideMealMutatrtion.isLoading){
         return "loading ..."
     }
   return (
@@ -128,7 +147,7 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
         sx={{
             display : 'flex',
             gap : '30px',
-            backgroundImage : `linear-gradient(${randomDegree}deg ,#020633 , #363843)`,
+            backgroundImage : `linear-gradient(${randomDegree}deg ,#000000 , #372700)`,
             borderRadius : '12px',
             padding : '20px',
             transition : '0.3s',
@@ -175,7 +194,7 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
             </Typography>
             <Typography
                 sx={{
-                    color : '#23db3c',
+                    color : '#D0B05C',
                     textTransform : 'uppercase',
                     fontSize : '14px',
                     marginBottom : '10px',
@@ -269,6 +288,19 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
                         onClick={handleClickOpen}
                     >
                         <DeleteForeverOutlined color='error' />
+                    </IconButton>
+                    <IconButton
+                        onClick={() => hideMealMutatrtion.mutate(data.id)}
+                    >
+                        {
+                            data.visibility
+                            ? (
+                                <VisibilityOff  color='info'/>
+                            )
+                            : (
+                                <Visibility color='info' />
+                            )
+                        }
                     </IconButton>
                 </Box>
             )

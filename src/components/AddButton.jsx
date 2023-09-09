@@ -10,7 +10,7 @@ const AddButton = ({color , reactionFunction}) => {
             marginBottom : '10px',
             display : 'flex',
             alignItems : 'center',
-            border : `1px solid #23db3c`,
+            border : `1px solid #D0B05C`,
             borderRadius : '6px',
             transition : '0.4s',
             transformOrigin : 'bottom left',
@@ -24,7 +24,7 @@ const AddButton = ({color , reactionFunction}) => {
                 borderRadius : '50%',
                 left : '0',
                 top : '-10px',
-                backgroundColor : '#23db3c',
+                backgroundColor : '#D0B05C',
                 transition : '0.4s'
             },
             "&:hover" : {
@@ -68,7 +68,7 @@ const AddButton = ({color , reactionFunction}) => {
         >
             <AddOutlined 
                 sx={{
-                    color : `#23db3c`
+                    color : `#D0B05C`
                 }}
             />
         </IconButton>

@@ -40,7 +40,7 @@ const TopMeals = ({data}) => {
         >
           <DoubleArrow 
             sx={{
-              color : '#23db3c',
+              color : '#D0B05C',
               fontSize : '35px',
             }}
           />
