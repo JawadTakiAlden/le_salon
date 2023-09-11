@@ -6,6 +6,8 @@ import { request } from '../../api/request';
 import { useQuery } from '@tanstack/react-query';
 import OrderCards from '../OrderCards';
 import ReadyOrders from '../../components/ReadyOrders';
+import { useNavigate } from 'react-router';
+import Loader from '../../components/Loader';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -25,6 +27,8 @@ const getTimeStatsitics = () => {
 
 const Statistics = () => {
 
+    const navigate = useNavigate()
+
     const orderRateQuery = useQuery({
         queryKey : ['get-order-rate-from-server'],
         queryFn : getOrderRate
@@ -35,8 +39,31 @@ const Statistics = () => {
     })
 
     if(orderRateQuery.isLoading || timeStatisticsQuery.isLoading){
-        return "loading ..."
+        return <Loader/>
     }
+    if(orderRateQuery.isError){
+        if(orderRateQuery.error.response){
+          if(orderRateQuery.error.response.status === 401){
+            navigate('/signin')
+          }
+        }else if(orderRateQuery.error.request){
+          return <Typography>Server Not Response With Anything</Typography>
+        }else {
+          return <Typography>Server Response With Unkonwn Error : {orderRateQuery.error.message}</Typography>
+        }
+      }
+
+      if(timeStatisticsQuery.isError){
+        if(timeStatisticsQuery.error.response){
+          if(timeStatisticsQuery.error.response.status === 401){
+            navigate('/signin')
+          }
+        }else if(timeStatisticsQuery.error.request){
+          return <Typography>Server Not Response With Anything</Typography>
+        }else {
+          return <Typography>Server Response With Unkonwn Error : {timeStatisticsQuery.error.message}</Typography>
+        }
+      }
 
     const orderRate = orderRateQuery.data.data
     const timeStatistics = timeStatisticsQuery.data.data
@@ -59,8 +86,6 @@ const Statistics = () => {
               'rgba(54, 162, 235, 1)',
               'rgba(255, 206, 86, 1)',
               'rgba(75, 192, 192, 1)',
-              'rgba(153, 102, 255, 1)',
-              'rgba(255, 159, 64, 1)',
             ],
             borderWidth: 1,
           },

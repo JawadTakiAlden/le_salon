@@ -4,24 +4,26 @@ import { Box, IconButton, Typography } from '@mui/material';
 import { ArrowOutward, Delete, DeleteOutlined } from '@mui/icons-material';
 import { request } from '../../api/request';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
+import Loader from '../../components/Loader';
 
 
 const columns = [
     { field: 'id', headerName: 'ID', width: 50 },
     { field: 'table_id', headerName: 'Table ID', width : 100 },
     { field: 'total', headerName: 'Total', width : 100},
-    { field: 'state', headerName: 'State', type : 'singleSelect' , valueOptions : ['wanting' , 'new' , 'onGoing' , 'ready'] , editable : true , width : 150 , align : 'center' ,
+    { field: 'state', headerName: 'State', width : 150 , align : 'center' , headerAlign : 'center',
         renderCell : (params) => (
             <Box>
                 <Typography
                     sx={{
                         color : 'white',
                         padding : '4px 16px',
-                        backgroundColor : params.row.state === 'new'? '#9eb5ff' : params.row.state === 'preparing' ? '#ffe32c' : '#239b16',
+                        backgroundColor : params.row.order_state === 1 ? '#9eb5ff' : params.row.order_state === 2 ? '#ffe32c' : params.row.order_state === 3 ? '#a658ff' : '#239b16',
                         borderRadius : '20px'
                     }}
                 >
-                    {params.row.state}
+                    {params.row.order_state === 1 ? 'waiting' : params.row.order_state === 2 ? 'new' : params.row.order_state === 3 ? 'on going' : 'ready'}
                 </Typography>
             </Box>
         )
@@ -48,20 +50,27 @@ const getOrdersFromServer = () => {
 
 const Orders = () => {
 
+    const navigate = useNavigate()
     const ordersQuery = useQuery({
         queryKey : ['get-orders-from-server'],
         queryFn : getOrdersFromServer
     })
 
     if(ordersQuery.isLoading){
-        return 'loading ...'
+        return <Loader/>
     }
 
-    if(ordersQuery.isError) {
-        if(ordersQuery.error.response.status === 401){
-
+    if(ordersQuery.isError){
+        if(ordersQuery.error.response){
+          if(ordersQuery.error.response.status === 401){
+            navigate('/signin')
+          }
+        }else if(ordersQuery.error.request){
+          return <Typography>Server Not Response With Nothing</Typography>
+        }else {
+          return <Typography>Server Response With Unkonwn Error : {ordersQuery.error.message}</Typography>
         }
-    }
+      }
   return (
     <Box 
         sx={{
@@ -87,14 +96,11 @@ const Orders = () => {
                     }
                 },
                 '& .MuiDataGrid-cell:hover': {
-                  color: '#1ebd28',
+                  color: '#f6c566',
                 },
                 "& .MuiDataGrid-cell" : {
                     color : 'white',
                     transition : '0.3s'
-                },
-                '& .super-app-theme--header': {
-                    backgroundColor: 'rgba(255, 7, 0, 0.55)',
                 },
                 "& .MuiDataGrid-columnHeader" : {
                     color : 'white'

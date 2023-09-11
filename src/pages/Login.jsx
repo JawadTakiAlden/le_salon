@@ -18,6 +18,8 @@ import { request } from '../api/request';
 import { useMutation } from '@tanstack/react-query';
 import { login, useJawadAuthController } from '../context';
 import { useNavigate } from 'react-router';
+import { Alert, Snackbar } from '@mui/material';
+import Loader from '../components/Loader';
 
 function Copyright(props) {
   return (
@@ -34,7 +36,11 @@ function Copyright(props) {
 
 // TODO remove, this demo shouldn't need to reset the theme.
 
-const defaultTheme = createTheme();
+const defaultTheme = createTheme({
+  palette: {
+    mode : 'dark'
+  }
+});
 
 const loginUser = (values) => {
   return request({
@@ -49,6 +55,18 @@ export default function SignIn() {
   const [ , dispatch] = useJawadAuthController()
   const navigate = useNavigate()
 
+  const [open, setOpen] = React.useState(false);
+  const [alterMessage , setAlterMessage] = React.useState('')
+  const [messageType , setMessageType] = React.useState('')
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+  };
+
   const handleLoginSubmit = (values) => {
     loginUserMutation.mutate(values)
   };
@@ -62,19 +80,62 @@ export default function SignIn() {
         user : data.data.user
       })
       navigate('/')
+    },
+    onError : (error) => {
+      if (error.response){
+        switch(error.response.status){
+          case 401 : {
+            setAlterMessage('you are not authorize to get in our system')
+            setMessageType('error')
+            setOpen(true)
+            break
+          }
+          case 422 : {
+            setAlterMessage('email or password is wrong')
+            setMessageType('error')
+            setOpen(true)
+            break
+          }
+          case 500 : {
+            setAlterMessage('we have a problem in our server , come later')
+            setMessageType('error')
+            setOpen(true)
+            break
+          }
+          case 404 : {
+            setAlterMessage("we out of space , we can't find your destenation")
+            setMessageType('error')
+            setOpen(true)
+            break
+          }
+          default : {
+            setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+            setMessageType('error')
+            setOpen(true)
+            break
+          }
+        }
+      }else if(error.request){
+        setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+        setMessageType('error')
+        setOpen(true)
+      }else {
+        setAlterMessage('unknow error : ' + error.message)
+        setMessageType('error')
+        setOpen(true)
+      }
     }
   })
 
 
   if(loginUserMutation.isLoading){
-    return "loading ..."
+    return <Loader />
   }
 
 
   return (
-    <ThemeProvider theme={defaultTheme}>
+    <>
       <Container component="main" maxWidth="xs">
-        <CssBaseline />
         <Box
           sx={{
             marginTop: 8,
@@ -83,8 +144,10 @@ export default function SignIn() {
             alignItems: 'center',
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
+          <Avatar sx={{ m: 1, bgcolor: '#f6c566' }}>
+            <LockOutlinedIcon sx={{
+              color : 'white'
+            }} />
           </Avatar>
           <Typography component="h1" variant="h5">
             Sign in
@@ -103,7 +166,6 @@ export default function SignIn() {
                   handleBlur,
                   handleChange,
                   handleSubmit,
-                  setFieldValue
                 }) => (
                   <form onSubmit={handleSubmit}>
                     <TextField
@@ -120,6 +182,7 @@ export default function SignIn() {
                       name="email"
                       autoComplete="email"
                       autoFocus
+                      color='warning'
                     />
                     <TextField
                       margin="normal"
@@ -135,12 +198,13 @@ export default function SignIn() {
                       error={!!errors.password && !!touched.password}
                       helperText={errors.password && touched.password}
                       autoComplete="current-password"
+                      color='warning'
                     />
                     <Button
                       type="submit"
                       fullWidth
                       variant="contained"
-                      sx={{ mt: 3, mb: 2 }}
+                      sx={{ mt: 3, mb: 2 , bgcolor: '#f6c566' ,padding : '10px'}}
                     >
                       Sign In
                     </Button>
@@ -153,7 +217,12 @@ export default function SignIn() {
         </Box>
         <Copyright sx={{ mt: 8, mb: 4 }} />
       </Container>
-    </ThemeProvider>
+    <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+  <Alert onClose={handleClose} severity={messageType} sx={{ width: '100%' }}>
+    {alterMessage}
+  </Alert>
+</Snackbar>
+    </>
   );
 }
 

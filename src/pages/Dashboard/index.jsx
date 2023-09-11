@@ -1,9 +1,11 @@
-import { Box } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import React from 'react'
 import StatisticsCards from './components/StatisticsCards'
 import TopMeals from './components/TopMeals'
 import { useQuery } from '@tanstack/react-query'
 import { request } from '../../api/request'
+import { useNavigate } from 'react-router'
+import Loader from '../../components/Loader'
 
 const getStatisticsFromServer = () => {
   return request({
@@ -18,6 +20,7 @@ const getTopMealsFromServer = () => {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const statisticsQuery = useQuery({
     queryKey  : ['get-statistics-from-serve'],
     queryFn : getStatisticsFromServer,
@@ -28,19 +31,33 @@ const Dashboard = () => {
     queryFn : getTopMealsFromServer
   })
 
+  if(statisticsQuery.isLoading || TopMealsQuery.isLoading){
+    return <Loader/>
+  }
+
   if(statisticsQuery.isError){
-    throw new Error(statisticsQuery?.error?.message)
+    if(statisticsQuery.error.response){
+      if(statisticsQuery.error.response.status == 401){
+        navigate('/signin')
+      }
+    }else if(statisticsQuery.error.request){
+      return <Typography>Server Not Response With Antthing</Typography>
+    }else {
+      return <Typography>Server Response With Unkonwn Error : {statisticsQuery.error.message}</Typography>
+    }
   }
 
   if(TopMealsQuery.isError){
-    throw new Error(TopMealsQuery?.error?.message)
+    if(TopMealsQuery.error.response){
+      if(TopMealsQuery.error.response.status == 401){
+        navigate('/signin')
+      }
+    }else if(TopMealsQuery.error.request){
+      return <Typography>Server Not Response With Antthing</Typography>
+    }else {
+      return <Typography>Server Response With Unkonwn Error : {TopMealsQuery.error.message}</Typography>
+    }
   }
-
-  if(statisticsQuery.isLoading || TopMealsQuery.isLoading){
-    return 'loading ...'
-  }
-
-
 
   return (
     <Box>

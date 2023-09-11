@@ -6,3 +6,5 @@ export const  request = async ({...options}) => {
     return client(options)
     .then((res) => res)
 }
+
+export const imageBaseURL = 'https://api.godiva.gomaplus.tech'

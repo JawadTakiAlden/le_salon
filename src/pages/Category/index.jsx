@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, TextField, useMediaQuery } from '@mui/material'
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, TextField, Typography, useMediaQuery } from '@mui/material'
 import React, { useState } from 'react'
 import GridBox from '../../components/GridBox'
 import GridItem from '../../components/GridItem'
@@ -8,6 +8,23 @@ import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { request } from '../../api/request'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import Loader from '../../components/Loader'
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { useNavigate } from 'react-router'
+
+const VisuallyHiddenInput = styled('input')`
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  white-space: nowrap;
+  width: 1px;
+`;
+
 
 const getCategoriesFromServer = () => {
     return request({
@@ -27,12 +44,20 @@ const addCategoryToServer = (values) => {
 }
 
 const Categories = () => {
-    const [openAlterOpen, setOpenAlterOpen] = useState(false);
+    const [open, setOpen] = useState(false);
     const [AddFormOpen , setAddFormOpen] = useState(false)
-    const [message, setMessage] = useState(false);
-    const [severity , setSeverity] = useState('success')
+    const [alterMessage, setAlterMessage] = useState(false);
+    const [messageType , setMessageType] = useState('success')
     const isNonMobile = useMediaQuery("(min-width:600px)");
+    const [imagePreview, setImagePreview] = useState(null);
+    const navigate = useNavigate()
 
+
+    const handleSelectImage = (event) => {
+        const file = event.target.files[0];
+        
+        setImagePreview(URL.createObjectURL(file))
+      }
 
     const categoriesQuery = useQuery({
         queryKey : ['get-categories-from-server'],
@@ -42,11 +67,50 @@ const Categories = () => {
     const addCategoruMutation = useMutation({
         mutationKey : ['add-category-to-server'],
         mutationFn : addCategoryToServer,
-        onError : (error) => {
-            setMessage(error.message)
-            setSeverity('error')
-            setOpenAlterOpen(true)
-        },
+            onError : (error) => {
+                if (error.response){
+                  switch(error.response.status){
+                    case 401 : {
+                      setAlterMessage('you are not authorize to make this action')
+                      setMessageType('error')
+                      setOpen(true)
+                      break
+                    }
+                    case 422 : {
+                      setAlterMessage('there are some issues with your data')
+                      setMessageType('error')
+                      setOpen(true)
+                      break
+                    }
+                    case 500 : {
+                      setAlterMessage('we have a problem in our server , come later')
+                      setMessageType('error')
+                      setOpen(true)
+                      break
+                    }
+                    case 404 : {
+                      setAlterMessage("we out of space , we can't find your destenation")
+                      setMessageType('error')
+                      setOpen(true)
+                      break
+                    }
+                    default : {
+                      setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+                      setMessageType('error')
+                      setOpen(true)
+                      break
+                    }
+                  }
+                }else if(error.request){
+                  setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+                  setMessageType('error')
+                  setOpen(true)
+                }else {
+                  setAlterMessage('unknow error : ' + error.message)
+                  setMessageType('error')
+                  setOpen(true)
+                }
+              },
         onSuccess : () => {
             handleFormClose()
             categoriesQuery.refetch()
@@ -63,19 +127,27 @@ const Categories = () => {
     }
 
     if(categoriesQuery.isLoading){
-        return "loading .."
+        return <Loader />
     }
 
     if(categoriesQuery.isError){
-        throw new Error(categoriesQuery.error.message)
-    }
+        if(categoriesQuery.error.response){
+          if(categoriesQuery.error.response.status == 401){
+            navigate('/signin')
+          }
+        }else if(categoriesQuery.error.request){
+          return <Typography>Server Not Response With Anything</Typography>
+        }else {
+          return <Typography>Server Response With Unkonwn Error : {categoriesQuery.error.message}</Typography>
+        }
+      }
 
     const handleAlterClose = (event, reason) => {
         if (reason === 'clickaway') {
         return;
         }
 
-        setOpenAlterOpen(false);
+        setOpen(false);
     };
 
     const handleFormClose = (event, reason) => {
@@ -92,10 +164,9 @@ const Categories = () => {
 
 
     if(addCategoruMutation.isLoading){
-        return "loading ..."
+        return <Loader />
     }
 
-    console.log(categoriesQuery.data.data.categories)
   return (
     <>
         <Box>
@@ -103,25 +174,16 @@ const Categories = () => {
             <GridBox spacing={2}>
                 {
                     categoriesQuery.data.data.data.map(category => (
-                        <GridItem key={category.id} xs={12} sm={6} md={4} lg={3}>
-                            <CategoryCard data={category} setMessage={setMessage} setSeverity={setSeverity} setOpenAlterOpen={setOpenAlterOpen} refetch={categoriesQuery.refetch} />
+                        <GridItem key={category.id} xs={12} sm={6} md={4} lg={3} sx={{height : '100%'}}>
+                            <CategoryCard data={category} setAlterMessage={setAlterMessage} setMessageType={setMessageType} setAlterOpen={setOpen} refetch={categoriesQuery.refetch} />
                         </GridItem>
                     ))
                 }
-                {/* <GridItem xs={12} sm={6} md={4} lg={3}>
-                    <CategoryCard />
-                </GridItem>
-                <GridItem xs={12} sm={6} md={4} lg={3}>
-                    <CategoryCard />
-                </GridItem>
-                <GridItem xs={12} sm={6} md={4} lg={3}>
-                    <CategoryCard />
-                </GridItem> */}
             </GridBox>
         </Box>
-        <Snackbar open={openAlterOpen} autoHideDuration={4000} onClose={handleAlterClose}>
-            <Alert onClose={handleAlterClose} severity={severity} sx={{ width: '100%' }}>
-                {message}
+        <Snackbar open={open} autoHideDuration={4000} onClose={handleAlterClose}>
+            <Alert onClose={handleAlterClose} severity={messageType} sx={{ width: '100%' }}>
+                {alterMessage}
             </Alert>
         </Snackbar>
         <Dialog open={AddFormOpen} onClose={handleFormClose} maxWidth='md'>
@@ -164,23 +226,43 @@ const Categories = () => {
                                 error={!!touched.name && !!errors.name}
                                 helperText={touched.name && errors.name}
                                 label="Name"
-                                variant="filled"
+                                variant="outlined"
                             />
-                            <TextField 
-                                type='file'
-                                fullWidth 
-                                sx={{ gridColumn: "span 4" }}
-                                onBlur={handleBlur}
-                                onChange={(e) => {
+                            <Button
+                                component="label"
+                                variant="contained"
+                                startIcon={<CloudUploadIcon />}
+                                href="#file-upload"
+                                fullWidth
+                                sx={{
+                                    gridColumn: "span 4"
+                                }}
+                            >
+                                Upload a file
+                                <VisuallyHiddenInput onChange={(e) => {
                                     setFieldValue('imageFile' , e.currentTarget.files[0])
                                     handleChange(e)
-                                }}
-                                value={values.image}
-                                name="image"
-                                error={!!touched.image && !!errors.image}
-                                label="Image"
-                                variant="filled"
-                            />
+                                    handleSelectImage(e)
+                                }} type="file" name="image" value={values.image} />
+                            </Button>
+                            {
+                                imagePreview && (
+                                    <Box
+                                        sx={{
+                                            gridColumn: "span 4"
+                                        }}
+                                    >
+                                    <img 
+                                        src={imagePreview}
+                                        style={{
+                                            width : '100%',
+                                            borderRadius :'10px',
+                                            border : '1px dotted #888'
+                                        }}
+                                    />
+                                    </Box>
+                                )
+                            }
                         </Box>
                         <Box display="flex" justifyContent="end" mt="20px">
                             <Button type="submit" color="success" variant="contained">

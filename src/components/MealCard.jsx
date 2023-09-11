@@ -3,9 +3,10 @@ import React, { useState } from 'react'
 import MealImage from '../assets/images/meal-01.jpg'
 import { DeleteForeverOutlined, HideImageOutlined, ShowerOutlined, UpdateOutlined, Visibility, VisibilityOff } from '@mui/icons-material'
 import { useMutation } from '@tanstack/react-query'
-import { request } from '../api/request'
+import { imageBaseURL, request } from '../api/request'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
+import Loader from './Loader'
 
 
 
@@ -17,7 +18,7 @@ const gideMealInServer = (id) => {
 }
 
 
-const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterOpen , refetch , categories}) => {
+const MealCard = ({withActions , setAlterMessage , setMessageType , data , setAlterOpen , refetch , categories}) => {
     const randomDegree = Math.floor(Math.random() * 360)
     const [open, setOpen] = useState(false);
     const [AddFormOpen , setAddFormOpen] = useState(false)
@@ -58,11 +59,55 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
     const hideMealMutatrtion = useMutation({
         mutationKey : ['hide-meal-in-server'],
         mutationFn : gideMealInServer,
+        onError : (error) => {
+            if (error.response){
+              switch(error.response.status){
+                case 401 : {
+                  setAlterMessage('you are not authorize to make this action')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 422 : {
+                  setAlterMessage('there are some issues with your data')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 500 : {
+                  setAlterMessage('we have a problem in our server , come later')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 404 : {
+                  setAlterMessage("we out of space , we can't find your destenation")
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                default : {
+                  setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+              }
+            }else if(error.request){
+              setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+              setMessageType('error')
+              setOpen(true)
+            }else {
+              setAlterMessage('unknow error : ' + error.message)
+              setMessageType('error')
+              setOpen(true)
+            }
+          },
         onSuccess : () => {
             refetch()
-            setMessage('a meal switched successfully')
-            setSeverity('success')
-            setOpenAlterOpen(true)
+            setAlterMessage('a meal switched successfully')
+            setMessageType('success')
+            setAlterOpen(true)
             setAddFormOpen(false)
             refetch()
         }
@@ -72,15 +117,53 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
         mutationKey : ['add-meal-to-category'],
         mutationFn : updateMealToServer,
         onError : (error) => {
-            setMessage(error?.response?.message)
-            setSeverity('error')
-            setOpenAlterOpen(true)
-            setAddFormOpen(false)
-        },
+            if (error.response){
+              switch(error.response.status){
+                case 401 : {
+                  setAlterMessage('you are not authorize to make this action')
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+                case 422 : {
+                  setAlterMessage('there are some issues with your data')
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+                case 500 : {
+                  setAlterMessage('we have a problem in our server , come later')
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+                case 404 : {
+                  setAlterMessage("we out of space , we can't find your destenation")
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                default : {
+                  setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+              }
+            }else if(error.request){
+              setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+              setMessageType('error')
+              setAlterOpen(true)
+            }else {
+              setAlterMessage('unknow error : ' + error.message)
+              setMessageType('error')
+              setAlterOpen(true)
+            }
+          },
         onSuccess : () => {
-            setMessage('a meal created successfully')
-            setSeverity('success')
-            setOpenAlterOpen(true)
+            setAlterMessage('a meal created successfully')
+            setMessageType('success')
+            setAlterOpen(true)
             setAddFormOpen(false)
             refetch()
         }
@@ -113,16 +196,55 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
         mutationKey : ['delete-meal-from-server'],
         mutationFn : deleteMealFromServer,
         onSuccess : () => {
-            setSeverity('success')
-            setMessage('meal deleted successfully')
-            setOpenAlterOpen(true)
+            setMessageType('success')
+            setAlterMessage('meal deleted successfully')
+            setAlterOpen(true)
             refetch()
         },
         onError : (error) => {
-            setSeverity('error')
-            setMessage(error.message)
-            setOpenAlterOpen(true)
-        }
+            if (error.response){
+              switch(error.response.status){
+                case 401 : {
+                  setAlterMessage('you are not authorize to make this action')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 422 : {
+                  setAlterMessage('there are some issues with your data')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 500 : {
+                  setAlterMessage('we have a problem in our server , come later')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 404 : {
+                  setAlterMessage("we out of space , we can't find your destenation")
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                default : {
+                  setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+              }
+            }else if(error.request){
+              setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+              setMessageType('error')
+              setOpen(true)
+            }else {
+              setAlterMessage('unknow error : ' + error.message)
+              setMessageType('error')
+              setOpen(true)
+            }
+          },
     })
 
 
@@ -139,7 +261,7 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
     }
 
     if(deleteFromServer.isLoading || hideMealMutatrtion.isLoading){
-        return "loading ..."
+        return <Loader />
     }
   return (
     <>
@@ -152,7 +274,8 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
             padding : '20px',
             transition : '0.3s',
             flexDirection : 'column',
-            justifyContent : 'center',
+            justifyContent : 'space-between',
+            height : '100%',
         }}
     >
         <Box
@@ -167,7 +290,7 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
                     maxWidth : '100%',
                     borderRadius : '12px'
                 }}
-                src={`http://127.0.0.1:8000${data.image}`}
+                src={`${imageBaseURL}${data.image}`}
             />
         </Box>
         <Box>
@@ -318,7 +441,7 @@ const MealCard = ({withActions , setMessage , setSeverity , data , setOpenAlterO
     >
         <DialogTitle
             sx={{
-                color : '#23db3c',
+                color : '#D0B05C',
                 textTransform : 'capitalize'
             }}
         >

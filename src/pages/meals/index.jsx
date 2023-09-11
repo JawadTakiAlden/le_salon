@@ -1,4 +1,4 @@
-import { Alert, Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, MenuItem, Select, Snackbar, TextField, useMediaQuery } from '@mui/material'
+import { Alert, Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, MenuItem, Select, Snackbar, TextField, Typography, useMediaQuery } from '@mui/material'
 import React, { useState } from 'react'
 import GridBox from '../../components/GridBox'
 import GridItem from '../../components/GridItem'
@@ -8,6 +8,22 @@ import {Formik} from 'formik'
 import * as Yup from 'yup'
 import { request } from '../../api/request'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router'
+import Loader from '../../components/Loader'
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+
+const VisuallyHiddenInput = styled('input')`
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  white-space: nowrap;
+  width: 1px;
+`;
 
 
 const getCategoryFromServer = () => {
@@ -33,11 +49,20 @@ const addMealToServer = (values) => {
 }
 
 const Meals = () => {
-    const [openAlterOpen, setOpenAlterOpen] = useState(false);
+    const [open, setOpen] = useState(false);
     const [AddFormOpen , setAddFormOpen] = useState(false)
-    const [message, setMessage] = useState(false);
-    const [severity , setSeverity] = useState('success')
+    const [alterMessage, setAlterMessage] = useState(false);
+    const [messageType , setMessageType] = useState('success')
     const isNonMobile = useMediaQuery("(min-width:600px)");
+    const navigate = useNavigate()
+    const [imagePreview, setImagePreview] = useState(null);
+
+
+    const handleSelectImage = (event) => {
+        const file = event.target.files[0];
+        
+        setImagePreview(URL.createObjectURL(file))
+      }
 
 
     const getMealsQuery = useQuery({
@@ -55,38 +80,92 @@ const Meals = () => {
         mutationKey : ['add-meal-to-category'],
         mutationFn : addMealToServer,
         onError : (error) => {
-            setMessage(error?.response?.message)
-            setSeverity('error')
-            setOpenAlterOpen(true)
-            setAddFormOpen(false)
-        },
+            if (error.response){
+              switch(error.response.status){
+                case 401 : {
+                  setAlterMessage('you are not authorize to make this action')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 422 : {
+                  setAlterMessage('there are some issues with your data')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 500 : {
+                  setAlterMessage('we have a problem in our server , come later')
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                case 404 : {
+                  setAlterMessage("we out of space , we can't find your destenation")
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                default : {
+                  setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+              }
+            }else if(error.request){
+              setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+              setMessageType('error')
+              setOpen(true)
+            }else {
+              setAlterMessage('unknow error : ' + error.message)
+              setMessageType('error')
+              setOpen(true)
+            }
+          },
         onSuccess : () => {
-            setMessage('a meal created successfully')
-            setSeverity('success')
-            setOpenAlterOpen(true)
+            setAlterMessage('a meal created successfully')
+            setMessageType('success')
+            setOpen(true)
             setAddFormOpen(false)
             getMealsQuery.refetch()
         }
     })
 
     if(getMealsQuery.isLoading || getCategoryQuery.isLoading){
-        return "loading ..."
+        return <Loader/>
     }
 
     if(getMealsQuery.isError){
-        throw new Error(getMealsQuery.error.message)
-    }
+        if(getMealsQuery.error.response){
+          if(getMealsQuery.error.response.status === 401){
+            navigate('/signin')
+          }
+        }else if(getMealsQuery.error.request){
+          return <Typography>Server Not Response With Anything</Typography>
+        }else {
+          return <Typography>Server Response With Unkonwn Error : {getMealsQuery.error.message}</Typography>
+        }
+      }
 
-    if(getCategoryQuery.isError){
-        throw new Error(getCategoryQuery.error.message)
-    }
+      if(getCategoryQuery.isError){
+        if(getCategoryQuery.error.response){
+          if(getCategoryQuery.error.response.status === 401){
+            navigate('/signin')
+          }
+        }else if(getCategoryQuery.error.request){
+          return <Typography>Server Not Response With Antthing</Typography>
+        }else {
+          return <Typography>Server Response With Unkonwn Error : {getCategoryQuery.error.message}</Typography>
+        }
+      }
 
     const handleAlterClose = (event, reason) => {
         if (reason === 'clickaway') {
             return;
         }
 
-        setOpenAlterOpen(false);
+        setAlterMessage(false);
     };
 
     
@@ -121,28 +200,26 @@ const Meals = () => {
             <GridBox spacing={2}>
                 {
                     getMealsQuery.data.data.data.map(meal => (
-                        <GridItem key={meal.id} xs={12} sm={6} md={4}lg={3}>
-                            <MealCard withActions={true} setMessage={setMessage} setSeverity={setSeverity} setOpenAlterOpen={setOpenAlterOpen} data={meal} refetch={getMealsQuery.refetch} categories={getCategoryQuery.data.data.data}/>
+                        <GridItem key={meal.id} xs={12} sm={6} md={4}lg={3} sx={{hright : '100%'}}>
+                            <MealCard withActions={true} setMessageType={setMessageType} setAlterOpen={setOpen} setAlterMessag={setAlterMessage} data={meal} refetch={getMealsQuery.refetch} categories={getCategoryQuery.data.data.data}/>
                         </GridItem>
                     ))
                 }
-                {/* <GridItem xs={12} sm={6} md={4}lg={3}>
-                    <MealCard withActions={true} setMessage={setMessage} setSeverity={setSeverity} setOpenAlterOpen={setOpenAlterOpen}/>
-                </GridItem>
-                <GridItem xs={12} sm={6} md={4}lg={3}>
-                    <MealCard withActions={true} setMessage={setMessage} setSeverity={setSeverity}setOpenAlterOpen={setOpenAlterOpen}/>
-                </GridItem>
-                <GridItem xs={12} sm={6} md={4} lg={3}>
-                    <MealCard withActions={true} setMessage={setMessage} setSeverity={setSeverity}setOpenAlterOpen={setOpenAlterOpen}/>
-                </GridItem> */}
             </GridBox>
         </Box>
-        <Snackbar open={openAlterOpen} autoHideDuration={4000} onClose={handleAlterClose}>
-            <Alert onClose={handleAlterClose} severity={severity} sx={{ width: '100%' }}>
-                {message}
+        <Snackbar open={open} autoHideDuration={4000} onClose={handleAlterClose}>
+            <Alert onClose={handleAlterClose} severity={messageType} sx={{ width: '100%' }}>
+                {alterMessage}
             </Alert>
         </Snackbar>
-        <Dialog open={AddFormOpen} onClose={handleFormClose} maxWidth='md'>
+        <Dialog 
+            sx={{
+              "& .MuiPaper-root" : {
+                backgroundColor : '#2e2e2e',
+                color : '#fff'
+              }
+            }}
+        open={AddFormOpen} onClose={handleFormClose} maxWidth='xs'>
             <DialogTitle>New Meal</DialogTitle>
             <DialogContent>
                 <Formik
@@ -168,7 +245,7 @@ const Meals = () => {
                             gap="30px"
                             gridTemplateColumns="repeat(4, minmax(0, 1fr))"
                             sx={{
-                            "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
+                                "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
                             }}
                         >
                             <TextField 
@@ -182,7 +259,8 @@ const Meals = () => {
                                 error={!!touched.name && !!errors.name}
                                 helperText={touched.name && errors.name}
                                 label="Name"
-                                variant="filled"
+                                variant="outlined"
+                                color='secondary'
                             />
                             <TextField 
                                 type='text'
@@ -195,7 +273,8 @@ const Meals = () => {
                                 error={!!touched.description && !!errors.description}
                                 helperText={touched.description && errors.description}
                                 label="Description"
-                                variant="filled"
+                                variant="outlined"
+                                color='secondary'
                             />
                             <TextField 
                                 type='text'
@@ -208,9 +287,22 @@ const Meals = () => {
                                 error={!!touched.price && !!errors.price}
                                 helperText={touched.price && errors.price}
                                 label="Price"
-                                variant="filled"
+                                variant="outlined"
                             />
                             <TextField 
+                                type='text'
+                                fullWidth 
+                                sx={{ gridColumn: "span 4" }}
+                                onBlur={handleBlur}
+                                onChange={handleChange}
+                                value={values.calories}
+                                name="calories"
+                                error={!!touched.calories && !!errors.calories}
+                                helperText={touched.calories && errors.calories}
+                                label="Calories"
+                                variant="outlined"
+                            />
+                            {/* <TextField 
                                 type='file'
                                 fullWidth 
                                 sx={{ gridColumn: "span 4" }}
@@ -223,27 +315,43 @@ const Meals = () => {
                                 name="image"
                                 error={!!touched.image && !!errors.image}
                                 label="Image"
-                                variant="filled"
-                            />
-                            {/* <Autocomplete
-                                multiple
-                                id="tags-outlined"
-                                options={extra}
-                                getOptionLabel={(option) => option}
-                                defaultValue={[extra[1]]}
-                                filterSelectedOptions
+                                variant="outlined"
+                            /> */}
+                            <Button
+                                component="label"
+                                variant="contained"
+                                startIcon={<CloudUploadIcon />}
+                                href="#file-upload"
                                 fullWidth
-                                renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label="Extra Ingradients"
-                                    placeholder="Favorites"
-                                />
-                                )}
                                 sx={{
                                     gridColumn: "span 4"
                                 }}
-                            /> */}
+                            >
+                                Upload a file
+                                <VisuallyHiddenInput onChange={(e) => {
+                                    setFieldValue('imageFile' , e.currentTarget.files[0])
+                                    handleChange(e)
+                                    handleSelectImage(e)
+                                }} type="file" name="image" value={values.image} />
+                            </Button>
+                            {
+                                imagePreview && (
+                                    <Box
+                                        sx={{
+                                            gridColumn: "span 4"
+                                        }}
+                                    >
+                                    <img 
+                                        src={imagePreview}
+                                        style={{
+                                            width : '100%',
+                                            borderRadius :'10px',
+                                            border : '1px dotted #888'
+                                        }}
+                                    />
+                                    </Box>
+                                )
+                            }
                             <Select
                                 value={values.category_id}
                                 onChange={handleChange}
@@ -288,7 +396,8 @@ const initialValues = {
     description : '',
     image : '',
     imageFile : {},
-    category_id : ''
+    category_id : '',
+    calories : ''
 }
 
 const validationSchema = Yup.object({
@@ -296,7 +405,8 @@ const validationSchema = Yup.object({
     price : Yup.number().required('price field is requred'),
     description : Yup.string().required('description field is required'),
     image : Yup.string().required('image field is required'),
-    category_id : Yup.string().required('category field is required') 
+    category_id : Yup.string().required('category field is required'),
+    calories :  Yup.number().required('calories field is requred'),
 })
 
 export default Meals

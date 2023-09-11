@@ -3,18 +3,18 @@ import React, { useState } from 'react'
 import CategoryImage from '../assets/images/meal-01.jpg'
 import { DeleteOutlined, UpdateOutlined } from '@mui/icons-material'
 import { useMutation } from '@tanstack/react-query'
-import { request } from '../api/request'
+import { imageBaseURL, request } from '../api/request'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
+import Loader from './Loader'
 
-const CategoryCard = ({data , setMessage , setSeverity , setOpenAlterOpen , refetch}) => {
+const CategoryCard = ({data , setAlterMessage , setMessageType , setAlterOpen , refetch}) => {
     const [open, setOpen] = useState(false);
     const isNonMobile = useMediaQuery("(min-width:600px)")
     const [UpdateFormOpen , setUpdateFormOpen] = useState(false)
 
 
 const handleUpdateCategory = (values) => {
-        console.log(values)
         let categoryValues = {
             name : values.name,
         }
@@ -50,13 +50,52 @@ const handleFormClose = (event, reason) => {
     }
 
     const updateCategoruMutation = useMutation({
-        mutationKey : ['add-category-to-server'],
+        mutationKey : [`update-category-${data.id}-in-server`],
         mutationFn : updateCategoryToServer,
-        onError : (error) => {
-            setMessage(error.message)
-            setSeverity('error')
-            setOpenAlterOpen(true)
-        },
+            onError : (error) => {
+                if (error.response){
+                  switch(error.response.status){
+                    case 401 : {
+                      setAlterMessage('you are not authorize to make this action')
+                      setMessageType('error')
+                      setAlterOpen(true)
+                      break
+                    }
+                    case 422 : {
+                      setAlterMessage('there are some issues with your data')
+                      setMessageType('error')
+                      setAlterOpen(true)
+                      break
+                    }
+                    case 500 : {
+                      setAlterMessage('we have a problem in our server , come later')
+                      setMessageType('error')
+                      setAlterOpen(true)
+                      break
+                    }
+                    case 404 : {
+                      setAlterMessage("we out of space , we can't find your destenation")
+                      setMessageType('error')
+                      setOpen(true)
+                      break
+                    }
+                    default : {
+                      setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+                      setMessageType('error')
+                      setAlterOpen(true)
+                      break
+                    }
+                  }
+                }else if(error.request){
+                  setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+                  setMessageType('error')
+                  setAlterOpen(true)
+                }else {
+                  setAlterMessage('unknow error : ' + error.message)
+                  setMessageType('error')
+                  setAlterOpen(true)
+                }
+              },
         onSuccess : () => {
             handleFormClose()
             refetch()
@@ -90,14 +129,52 @@ const validationSchema = Yup.object({
     }
 
     const deleteCategoryMutation = useMutation({
-        mutationKey : ['delete-category-from-server'],
+        mutationKey : [`delete-category-${data.id}-from-server`],
         mutationFn : deleteCategoryFromServer,
         onError : (error) => {
-            setMessage(error.message)
-            setSeverity('error')
-            setOpenAlterOpen(true)
-            
-        },
+            if (error.response){
+              switch(error.response.status){
+                case 401 : {
+                  setAlterMessage('you are not authorize to make this action')
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+                case 422 : {
+                  setAlterMessage('there are some issues with your data')
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+                case 500 : {
+                  setAlterMessage('we have a problem in our server , come later')
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+                case 404 : {
+                  setAlterMessage("we out of space , we can't find your destenation")
+                  setMessageType('error')
+                  setOpen(true)
+                  break
+                }
+                default : {
+                  setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
+                  setMessageType('error')
+                  setAlterOpen(true)
+                  break
+                }
+              }
+            }else if(error.request){
+              setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
+              setMessageType('error')
+              setAlterOpen(true)
+            }else {
+              setAlterMessage('unknow error : ' + error.message)
+              setMessageType('error')
+              setAlterOpen(true)
+            }
+          },
         onSuccess : (data) => {
             refetch()
             handleClose()
@@ -108,8 +185,9 @@ const validationSchema = Yup.object({
     }
 
     if(deleteCategoryMutation.isLoading){
-        return "loading ..."
+        return <Loader/>
     }
+    console.log(data)
   return (
     <>
         <Box
@@ -120,7 +198,8 @@ const validationSchema = Yup.object({
                 boxShadow : '2px 2px 15px -4px #D0B05C',
                 padding : '20px',
                 borderRadius : '12px',
-                gap : '10px'
+                gap : '10px',
+                height : '100%'
             }}
         >
             
@@ -137,7 +216,7 @@ const validationSchema = Yup.object({
                         width : '80px',
                         height : '80px',
                         borderRadius : '50%',
-                        backgroundImage : `url(http://127.0.0.1:8000${data.image})`,
+                        backgroundImage : `url(${imageBaseURL}${data.image})`,
                         backgroundSize : 'cover',
                         backgroundPosition : 'center',
                         backgroundRepeat : 'no-repeat',
@@ -214,7 +293,7 @@ const validationSchema = Yup.object({
     >
         <DialogTitle
             sx={{
-                color : '#23db3c',
+                color : '#D0B05C',
                 textTransform : 'capitalize'
             }}
         >

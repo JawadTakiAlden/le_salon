@@ -1,8 +1,16 @@
 import { NotificationsOutlined } from '@mui/icons-material'
 import { Box, Button, IconButton, Typography } from '@mui/material'
 import React from 'react'
+import { logout, useJawadAuthController } from '../context'
+import { useNavigate } from 'react-router'
 
 const Header = () => {
+    const [, duspatch] = useJawadAuthController()
+    const navigate = useNavigate()
+    const logoutUser = () => {
+        logout(duspatch , null)
+        navigate('/signin')
+    }
   return (
     <Box
         sx={{
@@ -27,17 +35,9 @@ const Header = () => {
             Godiva
         </Typography>
         <Box>
-            <IconButton
-                color='success'
-            >
-                <NotificationsOutlined 
-                    sx={{
-                        color:'#fff'
-                    }}
-                />
-            </IconButton>
             <Button
                 color='error'
+                onClick={logoutUser}
             >
                 logout
             </Button>

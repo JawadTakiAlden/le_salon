@@ -1,8 +1,7 @@
 import React from 'react'
-import { Box } from '@mui/material'
+import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 import DSidebar from './components/DSidebar'
 import Header from './components/Header'
-import Breadcrumb from './components/Breadcrumb'
 import { Route, Routes, useLocation } from 'react-router'
 import Dashboard from './pages/Dashboard'
 import "./App.css"
@@ -10,26 +9,21 @@ import './components/Animation.css'
 import Meals from './pages/meals'
 import Categories from './pages/Category'
 import Orders from './pages/Order'
-import ExtraIngrediants from './pages/ExtraIngrediants'
-import { ErrorBoundary } from 'react-error-boundary'
 import SignIn from './pages/Login'
 import Statistics from './pages/statistics'
 
-function fallbackRender({ error, resetErrorBoundary }) {
-  // Call resetErrorBoundary() to reset the error boundary and retry the render.
-
-  return (
-    <div role="alert">
-      <p style={{color : 'white'}}>Something went wrong:</p>
-      <pre style={{ color: "red" }}>{error.message}</pre>
-    </div>
-  );
-}
+const defaultTheme = createTheme({
+  palette: {
+    mode : 'dark'
+  }
+});
 
 
 const App = () => {
   const location = useLocation()
   return (
+    <ThemeProvider theme={defaultTheme}>
+      <CssBaseline />
       <Box
         sx={{
           display : 'flex',
@@ -58,12 +52,6 @@ const App = () => {
               </>
             )
           }
-          <ErrorBoundary 
-            fallbackRender={fallbackRender} 
-            onReset={(details) => {
-              // Reset the state of your app so the error doesn't happen again
-            }}
-          >
             <Routes>
               <Route path='/' element={<Dashboard />} />
               <Route path='/signin' element={<SignIn />} />
@@ -72,9 +60,9 @@ const App = () => {
               <Route path='/orders' element={<Orders />} />
               <Route path='/statistics' element={<Statistics />} />
             </Routes>
-          </ErrorBoundary>
         </Box>
       </Box>
+      </ThemeProvider>
   )
 }
 
