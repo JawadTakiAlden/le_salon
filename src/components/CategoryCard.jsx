@@ -184,7 +184,7 @@ const validationSchema = Yup.object({
         deleteCategoryMutation.mutate()
     }
 
-    if(deleteCategoryMutation.isLoading){
+    if(deleteCategoryMutation.isLoading || updateCategoruMutation.isLoading){
         return <Loader/>
     }
     console.log(data)

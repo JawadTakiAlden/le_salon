@@ -65,42 +65,42 @@ const MealCard = ({withActions , setAlterMessage , setMessageType , data , setAl
                 case 401 : {
                   setAlterMessage('you are not authorize to make this action')
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 case 422 : {
                   setAlterMessage('there are some issues with your data')
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 case 500 : {
                   setAlterMessage('we have a problem in our server , come later')
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 case 404 : {
                   setAlterMessage("we out of space , we can't find your destenation")
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 default : {
                   setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
               }
             }else if(error.request){
               setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
               setMessageType('error')
-              setOpen(true)
+              setAlterOpen(true)
             }else {
               setAlterMessage('unknow error : ' + error.message)
               setMessageType('error')
-              setOpen(true)
+              setAlterOpen(true)
             }
           },
         onSuccess : () => {
@@ -199,6 +199,7 @@ const MealCard = ({withActions , setAlterMessage , setMessageType , data , setAl
             setMessageType('success')
             setAlterMessage('meal deleted successfully')
             setAlterOpen(true)
+            setOpen(false)
             refetch()
         },
         onError : (error) => {
@@ -207,42 +208,42 @@ const MealCard = ({withActions , setAlterMessage , setMessageType , data , setAl
                 case 401 : {
                   setAlterMessage('you are not authorize to make this action')
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 case 422 : {
                   setAlterMessage('there are some issues with your data')
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 case 500 : {
                   setAlterMessage('we have a problem in our server , come later')
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 case 404 : {
                   setAlterMessage("we out of space , we can't find your destenation")
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
                 default : {
                   setAlterMessage("unkown error accoure : request falid with status code" + error.response.status)
                   setMessageType('error')
-                  setOpen(true)
+                  setAlterOpen(true)
                   break
                 }
               }
             }else if(error.request){
               setAlterMessage('server response with nothing , Check your internet connection or contact support if the problem persists')
               setMessageType('error')
-              setOpen(true)
+              setAlterOpen(true)
             }else {
               setAlterMessage('unknow error : ' + error.message)
               setMessageType('error')
-              setOpen(true)
+              setAlterOpen(true)
             }
           },
     })
@@ -260,7 +261,7 @@ const MealCard = ({withActions , setAlterMessage , setMessageType , data , setAl
         deleteFromServer.mutate()
     }
 
-    if(deleteFromServer.isLoading || hideMealMutatrtion.isLoading){
+    if(deleteFromServer.isLoading || hideMealMutatrtion.isLoading || updateMealMutation.isLoading){
         return <Loader />
     }
   return (

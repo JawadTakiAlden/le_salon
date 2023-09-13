@@ -112,8 +112,11 @@ const Categories = () => {
                 }
               },
         onSuccess : () => {
-            handleFormClose()
+            setOpen(true)
+            setAlterMessage('new category created successfully')
+            setMessageType('success')
             categoriesQuery.refetch()
+            handleFormClose()
         }
     })
 

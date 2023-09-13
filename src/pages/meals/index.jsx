@@ -132,7 +132,7 @@ const Meals = () => {
         }
     })
 
-    if(getMealsQuery.isLoading || getCategoryQuery.isLoading){
+    if(getMealsQuery.isLoading || getCategoryQuery.isLoading || addMealMutation.isLoading){
         return <Loader/>
     }
 
@@ -165,7 +165,7 @@ const Meals = () => {
             return;
         }
 
-        setAlterMessage(false);
+        setOpen(false);
     };
 
     
@@ -201,7 +201,7 @@ const Meals = () => {
                 {
                     getMealsQuery.data.data.data.map(meal => (
                         <GridItem key={meal.id} xs={12} sm={6} md={4}lg={3} sx={{hright : '100%'}}>
-                            <MealCard withActions={true} setMessageType={setMessageType} setAlterOpen={setOpen} setAlterMessag={setAlterMessage} data={meal} refetch={getMealsQuery.refetch} categories={getCategoryQuery.data.data.data}/>
+                            <MealCard withActions={true} setMessageType={setMessageType} setAlterOpen={setOpen} setAlterMessage={setAlterMessage} data={meal} refetch={getMealsQuery.refetch} categories={getCategoryQuery.data.data.data}/>
                         </GridItem>
                     ))
                 }
